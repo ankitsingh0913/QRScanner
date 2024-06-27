@@ -100,8 +100,7 @@ public class MainActivity extends AppCompatActivity {
         frameHandler.post(frameRunnable);
         Log.d(TAG, "Recording started");
     }
-
-
+    
     private void stopRecording() {
         isRecording = false;
         if (frameHandler != null && frameRunnable != null) {
