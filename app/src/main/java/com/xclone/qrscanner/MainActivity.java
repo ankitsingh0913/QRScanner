@@ -1,4 +1,5 @@
 package com.xclone.qrscanner;
+
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -6,6 +7,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,9 +16,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.otaliastudios.cameraview.CameraView;
 import com.otaliastudios.cameraview.frame.Frame;
 import com.otaliastudios.cameraview.frame.FrameProcessor;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private List<Bitmap> frameList = new ArrayList<>();
     private Adapter frameAdapter;
     private boolean isRecording = false;
-    private TextView recordingIndicator; // Added
+    private TextView recordingIndicator;
+    private long lastFrameTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,40 +64,39 @@ public class MainActivity extends AppCompatActivity {
     private void startRecording() {
         isRecording = true;
         recordingIndicator.setVisibility(View.VISIBLE);
-
+        lastFrameTime = 0;
         cameraView.addFrameProcessor(new FrameProcessor() {
             @Override
             public void process(@NonNull Frame frame) {
-                Log.d(TAG, "Processing frame");
-                ByteBuffer buffer = frame.getData();
-                int width = frame.getSize().getWidth();
-                int height = frame.getSize().getHeight();
-                byte[] data = new byte[buffer.remaining()];
-                buffer.get(data);
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastFrameTime >= 1000){
+                    lastFrameTime = currentTime;
+                    Log.d(TAG, "Processing frame");
+                    Log.d(TAG, "Frame format: " + frame.getFormat());
+                    Log.d(TAG, "Frame size: " + frame.getSize().getWidth() + "x" + frame.getSize().getHeight());
 
-                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(data));
-                Log.d(TAG, "Bitmap created");
+                    ByteBuffer buffer = frame.getData();
+                    int width = frame.getSize().getWidth();
+                    int height = frame.getSize().getHeight();
+                    byte[] data = new byte[buffer.remaining()];
+                    buffer.get(data);
+                    Log.d(TAG, "buffer: " + data.length);
+                    Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(data));
+                    Log.d(TAG, "Bitmap created");
 
-                runOnUiThread(() -> {
-                    synchronized (frameList) {
-                        frameList.add(bitmap);
-                        frameAdapter.notifyItemInserted(frameList.size() - 1);
-                    }
-                    Log.d(TAG, "Frame added to list, total frames: " + frameList.size());
-                });
+                    runOnUiThread(() -> {
+                        synchronized (frameList) {
+                            frameList.add(bitmap);
+                            frameAdapter.notifyItemInserted(frameList.size() - 1);
+                        }
+                        Log.d(TAG, "Frame added to list, total frames: " + frameList.size());
+                    });
+                }
             }
         });
 
         frameHandler = new Handler(Looper.getMainLooper());
-        frameRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (isRecording) {
-                    frameHandler.postDelayed(this, 500);
-                }
-            }
-        };
         frameHandler.post(frameRunnable);
         Log.d(TAG, "Recording started");
     }
