@@ -46,9 +46,24 @@
             android:layout_width="400dp"
             android:layout_marginTop="100dp"
             android:layout_marginLeft="20dp"
-            android:background="@drawable/cameraborderstyle"
             app:cameraFacing="back"
             app:cameraPreview="glSurface" >
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="300dp"
+                    android:layout_height="300dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_margin="40dp"
+                    android:layout_marginBottom="48dp"
+                    android:background="@drawable/cameraborderstyle" />
+            </RelativeLayout>
 
             <TextView
                 android:id="@+id/recordingIndicator"
@@ -59,7 +74,8 @@
                 android:textColor="#FF0000"
                 android:textSize="18sp"
                 android:visibility="gone"
-                android:layout_marginTop="150dp"/>
+                android:layout_alignParentBottom="true"
+                android:layout_marginTop="180dp"/>
         </com.otaliastudios.cameraview.CameraView>
 
         <LinearLayout
@@ -96,7 +112,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp">
+            android:layout_marginTop="50dp">
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerView"
                 android:layout_width="match_parent"
