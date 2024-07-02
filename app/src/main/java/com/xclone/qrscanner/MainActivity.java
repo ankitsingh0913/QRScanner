@@ -1,6 +1,7 @@
 package com.xclone.qrscanner;
 
 import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.otaliastudios.cameraview.CameraView;
 import com.otaliastudios.cameraview.frame.Frame;
@@ -28,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private CameraView cameraView;
-    private ImageView imageView;
+    private static ImageView imageView;
     private List<Bitmap> frameList = new ArrayList<>();
     private FrameAdapter frameAdapter;
     private boolean isRecording = false;
@@ -47,19 +50,19 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        imageView = findViewById(R.id.imageView);
+//        imageView = findViewById(R.id.imageView);
 
 //        setupRecyclerView();
         setupCameraView();
         setupRecordingControls();
     }
 
-//    private void setupRecyclerView() {
-//        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-//        frameAdapter = new FrameAdapter(frameList);
-//        recyclerView.setAdapter(frameAdapter);
-//    }
+    private void setupRecyclerView() {
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        frameAdapter = new FrameAdapter(frameList);
+        recyclerView.setAdapter(frameAdapter);
+    }
 
     private void setupCameraView() {
         cameraView = findViewById(R.id.camera);
@@ -102,28 +105,29 @@ public class MainActivity extends AppCompatActivity {
                 lastFrameTime = currentTime;
                 Log.d(TAG, "Processing frame");
                 Log.d(TAG, "Frame size: " + frame.getSize());
+                Log.d(TAG, "Frame Data: " + frame.getData());
+                Log.d(TAG, "Frame class: " + frame.getDataClass());
 
-
-                ByteBuffer buffer = frame.getData();
                 int width = frame.getSize().getWidth();
                 int height = frame.getSize().getHeight();
 
-                if (frame.getDataClass() == byte[].class){
+                Bitmap bitmap = null;
+                if (frame.getDataClass() == byte[].class) {
+                    Log.d(TAG, "Frame is in BYTES");
                     byte[] data = frame.getData();
-                    buffer.get(data);
-                    Bitmap bitmap = createBitmapFromFrame(data, width, height);
+                    bitmap = createBitmapFromFrame(data, width, height);
                     if (bitmap != null) {
-//                    addFrameToList(bitmap);
-                        updateImageView(bitmap);
+                        addFrameToList(bitmap);
                         startRecording();
                     }
-                }
-                else if (frame.getDataClass() == Image.class) {
+                } else if (frame.getDataClass() == Image.class) {
+                    Log.d(TAG, "Frame is in IMAGE format");
                     Image image = frame.getData();
-                    Bitmap bitmap = createBitmapFromImage(image);
-                    if (bitmap != null) {
-                        updateImageView(bitmap);
-                    }
+                    bitmap = createBitmapFromImage(image);
+                }
+
+                if (bitmap != null) {
+                    updateImageView(bitmap);
                 }
 
             }
@@ -137,14 +141,19 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private Bitmap createBitmapFromFrame(byte[] data, int width, int height) {
+    public static Bitmap createBitmapFromFrame(byte[] frameData, int width, int height) {
+        // Calculate the size required for the bitmap buffer
+        int bufferSize = width * height * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8;
+        ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
+        buffer.put(frameData);
+        buffer.rewind();
+
+        // Create the bitmap (assuming you've converted the frame data to ARGB_8888)
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        try {
-            bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(data));
+        if (bitmap != null) {
             Log.d(TAG, "Bitmap created");
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to create bitmap from frame data", e);
-            return null;
+            bitmap.copyPixelsFromBuffer(buffer);
+            imageView.setImageBitmap(bitmap);
         }
         return bitmap;
     }
@@ -169,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
     private void addFrameToList(Bitmap bitmap) {
         runOnUiThread(() -> {
             synchronized (frameList) {
-//                frameList.add(bitmap);
                 frameList.add(bitmap);
                 frameAdapter.notifyItemInserted(frameList.size() - 1);
             }
