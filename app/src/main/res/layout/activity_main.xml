@@ -109,23 +109,22 @@
 
         </LinearLayout>
 
-<!--        <ImageView-->
-<!--            android:layout_width="200dp"-->
-<!--            android:layout_height="200dp"-->
-<!--            android:id="@+id/imageView"-->
-<!--            android:layout_marginLeft="120dp"-->
-<!--            android:layout_marginTop="30dp"/>-->
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp">
+            android:layout_marginTop="50dp"
+            android:orientation="horizontal">
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="150dp">
+                android:layout_width="260dp"
+                android:layout_height="200dp">
 
             </androidx.recyclerview.widget.RecyclerView>
+
+            <ImageView
+                android:layout_width="150dp"
+                android:layout_height="200dp"
+                android:id="@+id/imageView"/>
         </LinearLayout>
     </LinearLayout>
 

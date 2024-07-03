@@ -1,6 +1,7 @@
 package com.xclone.qrscanner;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class FrameAdapter extends RecyclerView.Adapter<FrameAdapter.FrameViewHolder> {
 
-    private final List<Bitmap> frameList;
+    private List<Bitmap> frameList;
 
     public FrameAdapter(List<Bitmap> frameList) {
         this.frameList = frameList;
@@ -30,6 +31,7 @@ public class FrameAdapter extends RecyclerView.Adapter<FrameAdapter.FrameViewHol
     public void onBindViewHolder(@NonNull FrameViewHolder holder, int position) {
         Bitmap frame = frameList.get(position);
         holder.imageView.setImageBitmap(frame);
+        Log.d("FrameAdapter", "Bound frame at position " + position);
     }
 
     @Override
